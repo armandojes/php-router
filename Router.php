@@ -90,6 +90,8 @@ class Router {
 
   //ejecutaren caso de no encontrar match
   private function no_match(){
+    header('Content-type: application/json');
+    http_response_code(404);
     echo json_encode([
       'error' => true,
       'errorCode' => 404,
