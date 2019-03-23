@@ -6,6 +6,7 @@ class Router {
   private $routes = [];          //rutas definidas
   private $routeMatch = null;    //ruta matched
 
+
   // h e l p e r s
   //convierte cada parte en objetos string -> {param: true || false, path}
   private function routePartToObject ($path){
@@ -28,8 +29,6 @@ class Router {
     return preg_match('/\{[a-zA-Z0-9]+\}/', $partRoutes->path);
   }
 
-
-
   // p r i v  a t e   f u n c  t i o n s
 
   //mapea la ruta de entrada y crea this->request
@@ -42,7 +41,7 @@ class Router {
     ];
   }
 
-  //agsrega una nueva ruta en la cola de rutas
+  //agrega una nueva ruta en la cola de rutas
   private function add_route ($path, $action, $method){
     $route = (object) [
       'path' => $path,
@@ -65,16 +64,13 @@ class Router {
   }
 
   //extact variables ($this->routeMatch) : [...params]
-  //asignar array vacion en caso de no contener params
   private function extract_variables(){
     if (!$this->routeMatch) return [];
     $existParams = preg_match('/\{[a-zA-Z0-9]+\}/', $this->routeMatch->path);
     if (!$existParams) { $this->routeMatch->params = []; return [];}
     $params = [];
     foreach ($this->routeMatch->parts as $index => $part) {
-      if ($part->param){
-      $params = array_merge($params,[$part->path => $this->request->parts[$index]->path]);
-      }
+      if ($part->param) $params = array_merge($params,[preg_replace('/[\{\}]/','',$part->path) => $this->request->parts[$index]->path]);
     }
     $this->routeMatch->params = (object) $params;
     return $params;
