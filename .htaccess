@@ -1,0 +1,7 @@
+RewriteEngine On
+Options +FollowSymLinks
+
+RewriteRule ^(.*)$ index.php?path=$1 [QSA,L]
+
+# redirigir todo lo trafico al archivo index.php con el parametro path: que contiene toda la ruta
+# E J E M P L O  /admin/pages/user => index.php?path=/admin/pages/user
