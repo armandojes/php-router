@@ -8,7 +8,7 @@ class Router {
 
 
   // h e l p e r s
-  //convierte cada parte en objetos string -> {param: true || false, path}
+  //convierte cada parte en objetos. string =>> {param: true || false, path}
   private function routePartToObject ($path){
     $params = preg_match('/{[a-z0-9]+}/', $path) ? true : false;
     $ArrayOfparts = explode('/', substr($path, 1));
@@ -30,8 +30,7 @@ class Router {
   }
 
   // p r i v  a t e   f u n c  t i o n s
-
-  //mapea la ruta de entrada y crea this->request
+  //mapea la ruta de entrada y crea $this->request
   private function map_request(){
     $path = $_GET['path'] === '' ? '/' : '/'.$_GET['path'];
     $this->request = (object) [
@@ -52,7 +51,7 @@ class Router {
     array_push($this->routes, $route);
   }
 
-  //mapear todas las rutas para encontrar coincidencias y muta match routeMatch
+  //mapear todas las rutas para encontrar coincidencias y define match routeMatch
   private function map_routes(){
     foreach ($this->routes as $route) {
       $isMatched = $this->Verific_route($route);
@@ -65,15 +64,12 @@ class Router {
 
   //extact variables ($this->routeMatch) : [...params]
   private function extract_variables(){
-    if (!$this->routeMatch) return [];
-    $existParams = preg_match('/\{[a-zA-Z0-9]+\}/', $this->routeMatch->path);
-    if (!$existParams) { $this->routeMatch->params = []; return [];}
+    if (!$this->routeMatch) return false;
     $params = [];
     foreach ($this->routeMatch->parts as $index => $part) {
       if ($part->param) $params = array_merge($params,[preg_replace('/[\{\}]/','',$part->path) => $this->request->parts[$index]->path]);
     }
-    $this->routeMatch->params = (object) $params;
-    return $params;
+    $this->routeMatch->params = count($params) > 0 ? (object) $params : null;
   }
 
 
@@ -100,19 +96,45 @@ class Router {
     ]);
   }
 
-
-  // p u b l i c   f u n c t i o n s
-
-  public function get($path, $action){
-    $this->add_route($path, $action, 'GET');
+  //encargado de ejecura funcion correspondientes, action, class o no_match
+  private function execute(){
+    if (!$this->routeMatch){
+      $this->no_match();
+    } else if (!is_string($this->routeMatch->action)){
+      $this->routeMatch->action->__invoke($this->routeMatch->params);
+    } else {
+      $Controller = new $this->routeMatch->action($this->routeMatch->params);
+      $Controller->execute();
+    }
   }
 
+  // p u b l i c   f u n c t i o n s
   public function dispatch(){
     $this->map_request();
     $this->map_routes();
     $this->extract_variables();
-    $this->routeMatch
-      ? $this->routeMatch->action->__invoke($this->routeMatch->params)
-      : $this->no_match();
+    $this->execute();
   }
+
+  // definir rutas
+  public function get($path, $action){
+    $this->add_route($path, $action, 'GET');
+  }
+  public function post($path, $action){
+    $this->add_route($path, $action, 'POST');
+  }
+  public function put($path, $action){
+    $this->add_route($path, $action, 'PUT');
+  }
+  public function delete($path, $action){
+    $this->add_route($path, $action, 'DELETE');
+  }
+  public function update($path, $action){
+    $this->add_route($path, $action, 'UPDATE');
+  }
+  public function patch($path, $action){
+    $this->add_route($path, $action, 'PATCH');
+  }
+
+
 }
